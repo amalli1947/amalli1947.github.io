@@ -43,7 +43,7 @@ input {
 }
 
 button {
-    padding: 12px 22px;
+    padding: 12px 18px;
     background: linear-gradient(90deg, #198754, #157347);
     color: white;
     border: none;
@@ -61,25 +61,39 @@ button {
 }
 
 .village {
-    padding: 10px;
-    margin-top: 6px;
+    padding: 12px;
+    margin-top: 8px;
     border-radius: 6px;
     background: white;
     border: 1px solid #ddd;
 }
 
+.actions {
+    margin-top: 8px;
+}
+
+.map-btn {
+    display: inline-block;
+    padding: 8px 12px;
+    background: #0d6efd;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 8px;
+    font-size: 14px;
+}
+
 .share-btn {
     display: inline-block;
-    margin-top: 10px;
-    padding: 10px 15px;
+    padding: 8px 12px;
     background: #25D366;
     color: white;
     border-radius: 6px;
     cursor: pointer;
-    font-weight: bold;
-    text-align: center;
+    font-size: 14px;
 }
 
+.map-btn:hover,
 .share-btn:hover {
     opacity: 0.9;
 }
@@ -128,10 +142,19 @@ function searchByPin() {
         data[0].PostOffice.forEach(po => {
             html += `
             <div class="village">
-            📍 <b>${po.Name}</b> – ${po.District}<br>
-            <div class="share-btn"
-            onclick="shareWhatsApp('${po.Name}','${po.Pincode}','${po.District}','${po.State}')">
-            📲 Share on WhatsApp
+            📍 <b>${po.Name}</b><br>
+            ${po.District}, ${po.State}<br>
+
+            <div class="actions">
+                <span class="map-btn"
+                onclick="openMap('${po.Name}','${po.District}','${po.State}')">
+                🗺️ See on Map
+                </span>
+
+                <span class="share-btn"
+                onclick="shareWhatsApp('${po.Name}','${po.Pincode}','${po.District}','${po.State}')">
+                📲 WhatsApp
+                </span>
             </div>
             </div>`;
         });
@@ -159,14 +182,31 @@ function searchByVillage() {
             🏠 <b>${po.Name}</b><br>
             PIN: ${po.Pincode}<br>
             ${po.District}, ${po.State}<br>
-            <div class="share-btn"
-            onclick="shareWhatsApp('${po.Name}','${po.Pincode}','${po.District}','${po.State}')">
-            📲 Share on WhatsApp
+
+            <div class="actions">
+                <span class="map-btn"
+                onclick="openMap('${po.Name}','${po.District}','${po.State}')">
+                🗺️ See on Map
+                </span>
+
+                <span class="share-btn"
+                onclick="shareWhatsApp('${po.Name}','${po.Pincode}','${po.District}','${po.State}')">
+                📲 WhatsApp
+                </span>
             </div>
             </div>`;
         });
         resultDiv.innerHTML = html;
     });
+}
+
+function openMap(village, district, state) {
+    const query = `${village}, ${district}, ${state}, India`;
+    window.open(
+        "https://www.google.com/maps/search/?api=1&query=" +
+        encodeURIComponent(query),
+        "_blank"
+    );
 }
 
 function shareWhatsApp(name, pin, district, state) {
