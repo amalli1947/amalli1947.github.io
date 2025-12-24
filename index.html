@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>India PIN Code Finder</title>
+<meta charset="UTF-8">
+<title>India PIN Code Search</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
 body {
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   background: #eef2f7;
   margin: 0;
 }
@@ -16,7 +17,7 @@ body {
 .header {
   background: #0d6efd;
   color: white;
-  padding: 20px;
+  padding: 15px;
   text-align: center;
 }
 
@@ -26,11 +27,10 @@ body {
   padding: 15px;
 }
 
-.search-box {
+.box {
   background: white;
-  padding: 20px;
-  border-radius: 12px;
-  text-align: center;
+  padding: 15px;
+  border-radius: 10px;
 }
 
 input, button {
@@ -46,10 +46,10 @@ button {
   border: none;
 }
 
-.result-card {
+.result {
   background: white;
   margin-top: 10px;
-  padding: 12px;
+  padding: 10px;
   border-radius: 8px;
 }
 
@@ -69,7 +69,7 @@ button {
 
 <div class="container">
 
-  <div class="search-box">
+  <div class="box">
     <input id="pin" placeholder="Enter 6 digit PIN">
     <button onclick="searchPin()">Search</button>
   </div>
@@ -82,44 +82,49 @@ button {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-let map = L.map('map').setView([20.5937, 78.9629], 5);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap'
-}).addTo(map);
-
+let map;
 let marker;
+
+function initMap() {
+  map = L.map('map').setView([20.5937, 78.9629], 5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+}
+
+window.onload = initMap;
 
 function searchPin() {
   let pin = document.getElementById("pin").value;
   let result = document.getElementById("result");
 
-  if (pin.length !== 6) {
-    result.innerHTML = "❌ Enter valid PIN";
+  if (!/^\d{6}$/.test(pin)) {
+    result.innerHTML = "❌ Enter valid 6-digit PIN";
     return;
   }
 
   fetch("https://api.postalpincode.in/pincode/" + pin)
-    .then(r => r.json())
-    .then(d => {
-      if (d[0].Status !== "Success") {
+    .then(res => res.json())
+    .then(data => {
+      if (data[0].Status !== "Success") {
         result.innerHTML = "❌ No data found";
         return;
       }
 
-      let po = d[0].PostOffice[0];
       result.innerHTML = "";
 
-      d[0].PostOffice.forEach(p => {
+      data[0].PostOffice.forEach(p => {
         result.innerHTML += `
-          <div class="result-card">
+          <div class="result">
             <b>${p.Name}</b><br>
             ${p.District}, ${p.State}
           </div>`;
       });
 
-      let place = po.District + ", " + po.State + ", India";
+      let place = data[0].PostOffice[0].District + ", " +
+                  data[0].PostOffice[0].State + ", India";
 
-      fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + place)
+      fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(place))
         .then(r => r.json())
         .then(loc => {
           if (loc.length > 0) {
