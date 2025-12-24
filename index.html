@@ -1,104 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>India PIN Code Finder</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
-<style>
-body {
-  font-family: Arial, sans-serif;
-  background: #eef2f7;
-  margin: 0;
-}
-
-.header {
-  background: #0d6efd;
-  color: white;
-  padding: 20px;
-  text-align: center;
-}
-
-.container {
-  max-width: 500px;
-  margin: auto;
-  padding: 15px;
-}
-
-.search-box {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  text-align: center;
-}
-
-input, button {
-  width: 100%;
-  padding: 14px;
-  font-size: 16px;
-  margin-top: 10px;
-  border-radius: 8px;
-}
-
-button {
-  background: #198754;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-.result-card {
-  background: white;
-  padding: 15px;
-  margin-top: 15px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-#map {
-  height: 300px;
-  margin-top: 15px;
-  border-radius: 12px;
-}
-
-.footer {
-  text-align: center;
-  font-size: 14px;
-  margin: 20px 0;
-  color: #555;
-}
-</style>
-</head>
-
-<body>
-
-<div class="header">
-  <h2>India PIN Code Finder</h2>
-  <p>Villages & Map View</p>
-</div>
-
-<div class="container">
-
-  <div class="search-box">
-    <input type="text" id="pin" placeholder="Enter 6-digit PIN code">
-    <button onclick="searchPin()">Search</button>
-  </div>
-
-  <div id="result"></div>
-  <div id="map"></div>
-
-  <div class="footer">© 2025 PIN Code Search</div>
-</div>
-
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <script>
 let map;
-let markers = [];
+let marker;
 
 function searchPin() {
   let pin = document.getElementById("pin").value;
@@ -118,10 +20,6 @@ function searchPin() {
       }
 
       result.innerHTML = "";
-      clearMarkers();
-
-      let bounds = [];
-
       data[0].PostOffice.forEach(p => {
         result.innerHTML += `
           <div class="result-card">
@@ -131,38 +29,39 @@ function searchPin() {
             <b>PIN:</b> ${p.Pincode}
           </div>
         `;
-
-        if (p.Latitude && p.Longitude) {
-          let lat = parseFloat(p.Latitude);
-          let lon = parseFloat(p.Longitude);
-
-          let m = L.marker([lat, lon])
-            .bindPopup(`<b>${p.Name}</b><br>${p.District}`)
-            .addTo(map);
-
-          markers.push(m);
-          bounds.push([lat, lon]);
-        }
       });
 
-      if (bounds.length > 0) {
-        map.fitBounds(bounds);
-      }
+      // 🔹 Get location using OpenStreetMap search
+      let location =
+        data[0].PostOffice[0].District + ", " +
+        data[0].PostOffice[0].State + ", India";
+
+      fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(location))
+        .then(res => res.json())
+        .then(loc => {
+          if (loc.length > 0) {
+            showMap(loc[0].lat, loc[0].lon, location);
+          }
+        });
     });
 }
 
-function clearMarkers() {
+function showMap(lat, lon, text) {
   if (!map) {
-    map = L.map('map').setView([20.5937, 78.9629], 5);
+    map = L.map('map').setView([lat, lon], 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
     }).addTo(map);
+  } else {
+    map.setView([lat, lon], 12);
   }
 
-  markers.forEach(m => map.removeLayer(m));
-  markers = [];
+  if (marker) {
+    marker.remove();
+  }
+
+  marker = L.marker([lat, lon]).addTo(map)
+    .bindPopup(text)
+    .openPopup();
 }
 </script>
-
-</body>
-</html>
