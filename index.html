@@ -78,4 +78,107 @@ button:hover {
     cursor: pointer;
     border-radius: 6px;
     background: white;
-    border: 1px sol
+    border: 1px solid #ddd;
+    transition: 0.2s;
+}
+
+.village:hover {
+    background: #e7efff;
+    transform: scale(1.01);
+}
+
+/* Footer spacing */
+hr {
+    margin: 30px 0;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+🇮🇳 INDIA PIN CODE SEARCH
+</header>
+
+<div class="container">
+
+<h2>🔍 Search by PIN Code</h2>
+<input type="number" id="pinInput" placeholder="Enter 6-digit PIN code">
+<button onclick="searchByPin()">Search PIN</button>
+<div id="pinResult" class="result"></div>
+
+<hr>
+
+<h2>🔍 Search by Village Name</h2>
+<input type="text" id="villageInput" placeholder="Enter Village Name (example: Gudur)">
+<button onclick="searchByVillage()">Search Village</button>
+<div id="villageResult" class="result"></div>
+
+</div>
+
+<script>
+function searchByPin() {
+    const pin = document.getElementById("pinInput").value;
+    const resultDiv = document.getElementById("pinResult");
+    resultDiv.innerHTML = "Loading...";
+
+    fetch("https://api.postalpincode.in/pincode/" + pin)
+    .then(res => res.json())
+    .then(data => {
+        if (data[0].Status !== "Success") {
+            resultDiv.innerHTML = "❌ Invalid PIN code";
+            return;
+        }
+
+        let html = "<b>Villages / Post Offices:</b><br>";
+        data[0].PostOffice.forEach(po => {
+            html += `<div class="village"
+                     onclick="openMap('${po.Name}','${po.District}','${po.State}')">
+                     📍 ${po.Name} – ${po.District}
+                     </div>`;
+        });
+        resultDiv.innerHTML = html;
+    })
+    .catch(() => resultDiv.innerHTML = "Error fetching data");
+}
+
+function searchByVillage() {
+    const village = document.getElementById("villageInput").value;
+    const resultDiv = document.getElementById("villageResult");
+    resultDiv.innerHTML = "Loading...";
+
+    fetch("https://api.postalpincode.in/postoffice/" + village)
+    .then(res => res.json())
+    .then(data => {
+        if (data[0].Status !== "Success") {
+            resultDiv.innerHTML = "❌ Village not found";
+            return;
+        }
+
+        let html = "<b>Search Results:</b><br>";
+        data[0].PostOffice.forEach(po => {
+            html += `
+            <div class="village"
+            onclick="openMap('${po.Name}','${po.District}','${po.State}')">
+            🏠 <b>${po.Name}</b><br>
+            PIN: ${po.Pincode}<br>
+            ${po.District}, ${po.State}
+            </div>`;
+        });
+        resultDiv.innerHTML = html;
+    })
+    .catch(() => resultDiv.innerHTML = "Error fetching data");
+}
+
+function openMap(village, district, state) {
+    const query = `${village}, ${district}, ${state}, India`;
+    window.open(
+        "https://www.google.com/maps/search/?api=1&query=" +
+        encodeURIComponent(query),
+        "_blank"
+    );
+}
+</script>
+
+</body>
+</html>
