@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Andhra Pradesh PIN Code Search</title>
+<title>Nellore PIN Code Finder</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body {
@@ -10,17 +10,12 @@ body {
   text-align: center;
   padding: 20px;
 }
-select, button {
+select {
   padding: 12px;
   width: 90%;
   max-width: 360px;
   margin: 6px;
   font-size: 16px;
-}
-button {
-  background: #007bff;
-  color: white;
-  border: none;
 }
 .card {
   background: white;
@@ -35,11 +30,10 @@ button {
 
 <body>
 
-<h2>AP PIN Code Search</h2>
-<p>రాష్ట్రం → జిల్లా → మండలం → గ్రామం</p>
+<h2>Nellore District PIN Code Search</h2>
+<p>జిల్లా → మండలం → గ్రామం</p>
 
-<select id="district" onchange="loadMandals()">
-  <option value="">Select District</option>
+<select id="district">
   <option>Nellore</option>
 </select>
 
@@ -58,54 +52,63 @@ const data = {
   "Nellore": {
     "Kavali": {
       "Kavali": "524201",
-      "Bitragunta": "524121"
+      "Bitragunta": "524121",
+      "Chakalakonda": "524234"
     },
     "Atmakur": {
       "Atmakur": "524322",
       "Ananthasagaram": "524101"
+    },
+    "Gudur": {
+      "Gudur": "524101",
+      "Sydapuram": "524102"
+    },
+    "Venkatagiri": {
+      "Venkatagiri": "524132",
+      "Kaluvoya": "524343"
+    },
+    "Udayagiri": {
+      "Udayagiri": "524226",
+      "Varikuntapadu": "524227"
     }
   }
 };
 
-function loadMandals() {
-  mandal.innerHTML = "<option value=''>Select Mandal</option>";
-  village.innerHTML = "<option value=''>Select Village</option>";
-  result.innerHTML = "";
+const mandalSelect = document.getElementById("mandal");
+const villageSelect = document.getElementById("village");
+const result = document.getElementById("result");
 
-  let d = district.value;
-  if (!data[d]) return;
-
-  for (let m in data[d]) {
-    mandal.innerHTML += `<option>${m}</option>`;
+// Load mandals on page load
+window.onload = function () {
+  for (let m in data["Nellore"]) {
+    mandalSelect.innerHTML += `<option>${m}</option>`;
   }
-}
+};
 
 function loadVillages() {
-  village.innerHTML = "<option value=''>Select Village</option>";
+  villageSelect.innerHTML = "<option value=''>Select Village</option>";
   result.innerHTML = "";
 
-  let d = district.value;
-  let m = mandal.value;
-  if (!data[d][m]) return;
+  let m = mandalSelect.value;
+  if (!data["Nellore"][m]) return;
 
-  for (let v in data[d][m]) {
-    village.innerHTML += `<option>${v}</option>`;
+  for (let v in data["Nellore"][m]) {
+    villageSelect.innerHTML += `<option>${v}</option>`;
   }
 }
 
 function showPin() {
-  let d = district.value;
-  let m = mandal.value;
-  let v = village.value;
+  let m = mandalSelect.value;
+  let v = villageSelect.value;
 
   if (!v) return;
 
-  let pin = data[d][m][v];
+  let pin = data["Nellore"][m][v];
 
   result.innerHTML = `
     <div class="card">
       <b>State:</b> Andhra Pradesh<br>
-      <b>District:</b> ${d}<br>
+      <b>District:</b> Nellore<br>
       <b>Mandal:</b> ${m}<br>
       <b>Village:</b> ${v}<br>
       <b>PIN Code:</b> ${pin}
