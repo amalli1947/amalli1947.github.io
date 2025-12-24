@@ -3,34 +3,79 @@
 <head>
 <title>India PIN Code Search</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
 body {
-  font-family: Arial;
-  background: #f4f6f8;
-  text-align: center;
+  font-family: Arial, sans-serif;
+  background: #eef2f7;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 500px;
+  margin: auto;
   padding: 20px;
 }
-input, select, button {
-  padding: 12px;
-  width: 90%;
-  max-width: 360px;
-  margin: 6px;
-  font-size: 16px;
+
+.header {
+  background: #0d6efd;
+  color: white;
+  padding: 20px;
+  text-align: center;
+  border-radius: 0 0 20px 20px;
 }
+
+h2 {
+  margin: 0;
+}
+
+.search-box {
+  background: white;
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+input {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
 button {
-  background: #007bff;
+  width: 100%;
+  margin-top: 15px;
+  padding: 14px;
+  font-size: 16px;
+  background: #198754;
   color: white;
   border: none;
+  border-radius: 8px;
+  cursor: pointer;
 }
-.card {
+
+button:hover {
+  background: #157347;
+}
+
+.result-card {
   background: white;
   padding: 15px;
-  margin: 15px auto;
-  max-width: 380px;
-  border-radius: 8px;
-  box-shadow: 0 0 8px #ccc;
+  margin-top: 15px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
-hr {
+
+.footer {
+  text-align: center;
+  font-size: 14px;
+  color: #555;
   margin: 25px 0;
 }
 </style>
@@ -38,44 +83,34 @@ hr {
 
 <body>
 
-<h2>India PIN Code Finder</h2>
+<div class="header">
+  <h2>India PIN Code Finder</h2>
+  <p>Search villages & post offices by PIN</p>
+</div>
 
-<!-- OPTION 1: SEARCH BY PIN -->
-<h3>Search by PIN Code</h3>
-<input type="text" id="pin" placeholder="Enter 6-digit PIN code">
-<button onclick="searchByPin()">Search</button>
+<div class="container">
 
-<div id="pinResult"></div>
+  <div class="search-box">
+    <h3>Enter PIN Code</h3>
+    <input type="text" id="pin" placeholder="Example: 524001">
+    <button onclick="searchPin()">Search</button>
+  </div>
 
-<hr>
+  <div id="result"></div>
 
-<!-- OPTION 2: DROPDOWN SEARCH (SAMPLE) -->
-<h3>Search using Dropdown (Sample)</h3>
+  <div class="footer">
+    © 2025 PIN Code Search | India
+  </div>
 
-<select id="district" onchange="loadVillages()">
-  <option value="">Select District</option>
-  <option>Nellore</option>
-  <option>Chittoor</option>
-</select>
-
-<select id="village" onchange="showPin()">
-  <option value="">Select Village</option>
-</select>
-
-<select id="pincode">
-  <option value="">PIN Code</option>
-</select>
-
-<div id="dropResult"></div>
+</div>
 
 <script>
-// ---------- OPTION 1: PIN SEARCH (REAL DATA) ----------
-function searchByPin() {
+function searchPin() {
   let pin = document.getElementById("pin").value;
-  let result = document.getElementById("pinResult");
+  let result = document.getElementById("result");
 
   if (!/^\d{6}$/.test(pin)) {
-    result.innerHTML = "❌ Please enter valid 6-digit PIN";
+    result.innerHTML = "<div class='result-card'>❌ Please enter a valid 6-digit PIN</div>";
     return;
   }
 
@@ -83,56 +118,24 @@ function searchByPin() {
     .then(res => res.json())
     .then(data => {
       if (data[0].Status !== "Success") {
-        result.innerHTML = "❌ No data found";
+        result.innerHTML = "<div class='result-card'>❌ No data found</div>";
         return;
       }
 
       let html = "";
       data[0].PostOffice.forEach(p => {
         html += `
-        <div class="card">
-          <b>Village/Post Office:</b> ${p.Name}<br>
-          <b>District:</b> ${p.District}<br>
-          <b>State:</b> ${p.State}<br>
-          <b>PIN:</b> ${p.Pincode}
-        </div>`;
+          <div class="result-card">
+            <b>Village / Post Office:</b> ${p.Name}<br>
+            <b>District:</b> ${p.District}<br>
+            <b>State:</b> ${p.State}<br>
+            <b>PIN Code:</b> ${p.Pincode}
+          </div>
+        `;
       });
 
       result.innerHTML = html;
     });
-}
-
-// ---------- OPTION 2: DROPDOWN (SAMPLE DATA) ----------
-const dropdownData = {
-  "Nellore": {
-    "Kavali": "524201",
-    "Gudur": "524101"
-  },
-  "Chittoor": {
-    "Tirupati": "517501",
-    "Puttur": "517583"
-  }
-};
-
-function loadVillages() {
-  village.innerHTML = "<option>Select Village</option>";
-  pincode.innerHTML = "<option>PIN Code</option>";
-
-  let d = district.value;
-  if (!dropdownData[d]) return;
-
-  for (let v in dropdownData[d]) {
-    village.innerHTML += `<option>${v}</option>`;
-  }
-}
-
-function showPin() {
-  let d = district.value;
-  let v = village.value;
-
-  if (!dropdownData[d] || !dropdownData[d][v]) return;
-
-  pincode.innerHTML = `<option>${dropdownData[d][v]}</option>`;
 }
 </script>
 
