@@ -1,21 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Nellore PIN Code Finder</title>
+<title>India PIN Code Search</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body {
   font-family: Arial;
-  background: #f2f4f7;
+  background: #f4f6f8;
   text-align: center;
   padding: 20px;
 }
-select {
+input, select, button {
   padding: 12px;
   width: 90%;
   max-width: 360px;
   margin: 6px;
   font-size: 16px;
+}
+button {
+  background: #007bff;
+  color: white;
+  border: none;
 }
 .card {
   background: white;
@@ -25,95 +30,109 @@ select {
   border-radius: 8px;
   box-shadow: 0 0 8px #ccc;
 }
+hr {
+  margin: 25px 0;
+}
 </style>
 </head>
 
 <body>
 
-<h2>Nellore District PIN Code Search</h2>
-<p>జిల్లా → మండలం → గ్రామం</p>
+<h2>India PIN Code Finder</h2>
 
-<select id="district">
+<!-- OPTION 1: SEARCH BY PIN -->
+<h3>Search by PIN Code</h3>
+<input type="text" id="pin" placeholder="Enter 6-digit PIN code">
+<button onclick="searchByPin()">Search</button>
+
+<div id="pinResult"></div>
+
+<hr>
+
+<!-- OPTION 2: DROPDOWN SEARCH (SAMPLE) -->
+<h3>Search using Dropdown (Sample)</h3>
+
+<select id="district" onchange="loadVillages()">
+  <option value="">Select District</option>
   <option>Nellore</option>
-</select>
-
-<select id="mandal" onchange="loadVillages()">
-  <option value="">Select Mandal</option>
+  <option>Chittoor</option>
 </select>
 
 <select id="village" onchange="showPin()">
   <option value="">Select Village</option>
 </select>
 
-<div id="result"></div>
+<select id="pincode">
+  <option value="">PIN Code</option>
+</select>
+
+<div id="dropResult"></div>
 
 <script>
-const data = {
-  "Nellore": {
-    "Kavali": {
-      "Kavali": "524201",
-      "Bitragunta": "524121",
-      "Chakalakonda": "524234"
-    },
-    "Atmakur": {
-      "Atmakur": "524322",
-      "Ananthasagaram": "524101"
-    },
-    "Gudur": {
-      "Gudur": "524101",
-      "Sydapuram": "524102"
-    },
-    "Venkatagiri": {
-      "Venkatagiri": "524132",
-      "Kaluvoya": "524343"
-    },
-    "Udayagiri": {
-      "Udayagiri": "524226",
-      "Varikuntapadu": "524227"
-    }
+// ---------- OPTION 1: PIN SEARCH (REAL DATA) ----------
+function searchByPin() {
+  let pin = document.getElementById("pin").value;
+  let result = document.getElementById("pinResult");
+
+  if (!/^\d{6}$/.test(pin)) {
+    result.innerHTML = "❌ Please enter valid 6-digit PIN";
+    return;
   }
-};
 
-const mandalSelect = document.getElementById("mandal");
-const villageSelect = document.getElementById("village");
-const result = document.getElementById("result");
+  fetch("https://api.postalpincode.in/pincode/" + pin)
+    .then(res => res.json())
+    .then(data => {
+      if (data[0].Status !== "Success") {
+        result.innerHTML = "❌ No data found";
+        return;
+      }
 
-// Load mandals on page load
-window.onload = function () {
-  for (let m in data["Nellore"]) {
-    mandalSelect.innerHTML += `<option>${m}</option>`;
+      let html = "";
+      data[0].PostOffice.forEach(p => {
+        html += `
+        <div class="card">
+          <b>Village/Post Office:</b> ${p.Name}<br>
+          <b>District:</b> ${p.District}<br>
+          <b>State:</b> ${p.State}<br>
+          <b>PIN:</b> ${p.Pincode}
+        </div>`;
+      });
+
+      result.innerHTML = html;
+    });
+}
+
+// ---------- OPTION 2: DROPDOWN (SAMPLE DATA) ----------
+const dropdownData = {
+  "Nellore": {
+    "Kavali": "524201",
+    "Gudur": "524101"
+  },
+  "Chittoor": {
+    "Tirupati": "517501",
+    "Puttur": "517583"
   }
 };
 
 function loadVillages() {
-  villageSelect.innerHTML = "<option value=''>Select Village</option>";
-  result.innerHTML = "";
+  village.innerHTML = "<option>Select Village</option>";
+  pincode.innerHTML = "<option>PIN Code</option>";
 
-  let m = mandalSelect.value;
-  if (!data["Nellore"][m]) return;
+  let d = district.value;
+  if (!dropdownData[d]) return;
 
-  for (let v in data["Nellore"][m]) {
-    villageSelect.innerHTML += `<option>${v}</option>`;
+  for (let v in dropdownData[d]) {
+    village.innerHTML += `<option>${v}</option>`;
   }
 }
 
 function showPin() {
-  let m = mandalSelect.value;
-  let v = villageSelect.value;
+  let d = district.value;
+  let v = village.value;
 
-  if (!v) return;
+  if (!dropdownData[d] || !dropdownData[d][v]) return;
 
-  let pin = data["Nellore"][m][v];
-
-  result.innerHTML = `
-    <div class="card">
-      <b>State:</b> Andhra Pradesh<br>
-      <b>District:</b> Nellore<br>
-      <b>Mandal:</b> ${m}<br>
-      <b>Village:</b> ${v}<br>
-      <b>PIN Code:</b> ${pin}
-    </div>
-  `;
+  pincode.innerHTML = `<option>${dropdownData[d][v]}</option>`;
 }
 </script>
 
