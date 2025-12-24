@@ -5,12 +5,11 @@
 <title>India PIN Code Search</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
 body {
-  font-family: Arial, sans-serif;
+  font-family: Arial;
   background: #eef2f7;
   margin: 0;
 }
@@ -56,6 +55,11 @@ button {
   padding: 10px;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  cursor: pointer;
+}
+
+.result:hover {
+  background: #d9f0e3;
 }
 
 #map {
@@ -86,20 +90,19 @@ button {
     <button onclick="searchPin()">Search</button>
   </div>
 
-  <div id="result"></div>
+  <div id="villages"></div>
   <div id="map"></div>
 
   <div class="footer">© 2025 PIN Code Search</div>
 </div>
 
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
 let map;
 let marker;
 
-// Initialize map after page loads
+// Initialize map
 window.onload = function() {
   map = L.map('map').setView([20.5937, 78.9629], 5);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -107,70 +110,64 @@ window.onload = function() {
   }).addTo(map);
 };
 
+// Search PIN and show villages
 function searchPin() {
   let pin = document.getElementById("pin").value.trim();
-  let result = document.getElementById("result");
+  let villagesDiv = document.getElementById("villages");
+  villagesDiv.innerHTML = "";
 
   if (!/^\d{6}$/.test(pin)) {
-    result.innerHTML = "<div class='result'>❌ Enter valid 6-digit PIN</div>";
+    villagesDiv.innerHTML = "<div class='result'>❌ Enter valid 6-digit PIN</div>";
     return;
   }
 
-  // Fetch PIN data from India Post API
   fetch("https://api.postalpincode.in/pincode/" + pin)
     .then(res => res.json())
     .then(data => {
       if (data[0].Status !== "Success") {
-        result.innerHTML = "<div class='result'>❌ No data found</div>";
+        villagesDiv.innerHTML = "<div class='result'>❌ No data found</div>";
         return;
       }
 
-      result.innerHTML = "";
       let poList = data[0].PostOffice;
 
-      // Display all villages / post offices
-      let villageList = "";
+      // Show all villages as clickable divs
       poList.forEach(p => {
-        result.innerHTML += `
-          <div class="result">
-            <b>${p.Name}</b><br>
-            ${p.District}, ${p.State}<br>
-            PIN: ${p.Pincode}
-          </div>`;
-        villageList += p.Name + "<br>";
+        let div = document.createElement("div");
+        div.className = "result";
+        div.innerHTML = `<b>${p.Name}</b> (${p.District}, ${p.State})`;
+        div.onclick = () => goToVillage(p.Name, p.District, p.State, pin);
+        villagesDiv.appendChild(div);
       });
-
-      // Get district + state location using OpenStreetMap
-      let locationQuery = poList[0].District + ", " + poList[0].State + ", India";
-
-      fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(locationQuery))
-        .then(r => r.json())
-        .then(loc => {
-          if (loc.length > 0) {
-            let lat = loc[0].lat;
-            let lon = loc[0].lon;
-
-            // Remove previous marker
-            if (marker) map.removeLayer(marker);
-
-            // Add new marker
-            marker = L.marker([lat, lon]).addTo(map)
-              .bindPopup(
-                `<b>PIN:</b> ${pin}<br>` +
-                `<b>District:</b> ${poList[0].District}<br>` +
-                `<b>Villages / POs:</b><br>` + villageList
-              )
-              .openPopup();
-
-            map.setView([lat, lon], 11);
-          }
-        })
-        .catch(err => console.log("Map error:", err));
     })
     .catch(err => {
-      result.innerHTML = "<div class='result'>❌ Error fetching data</div>";
+      villagesDiv.innerHTML = "<div class='result'>❌ Error fetching data</div>";
       console.log(err);
     });
+}
+
+// Go to village on map
+function goToVillage(village, district, state, pin) {
+  let query = `${village}, ${district}, ${state}, India`;
+  fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(query))
+    .then(res => res.json())
+    .then(loc => {
+      if (loc.length > 0) {
+        let lat = loc[0].lat;
+        let lon = loc[0].lon;
+
+        if (marker) map.removeLayer(marker);
+
+        marker = L.marker([lat, lon]).addTo(map)
+          .bindPopup(`<b>${village}</b><br>${district}, ${state}<br>PIN: ${pin}`)
+          .openPopup();
+
+        map.setView([lat, lon], 13);
+      } else {
+        alert("Location not found for " + village);
+      }
+    })
+    .catch(err => console.log(err));
 }
 </script>
 
