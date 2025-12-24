@@ -10,33 +10,28 @@ body {
   margin: 0;
   font-family: Arial, sans-serif;
   background: #f4f6f8;
+  color: #333;
 }
 
-/* HEADER */
+/* TOP HEADER – PLAIN COLOR */
 header {
-  background: linear-gradient(90deg,#ff9933,#ffffff,#138808);
+  background: #1a73e8; /* plain blue */
+  color: white;
   padding: 15px;
   text-align: center;
-  border-bottom: 3px solid #138808;
 }
 
 header h1 {
-  margin: 5px 0;
+  margin: 0;
   font-size: 22px;
 }
 
 header p {
-  margin: 0;
+  margin: 5px 0 0;
   font-size: 14px;
 }
 
-/* INDIA MAP SVG */
-.india-map {
-  width: 90px;
-  margin: 5px auto;
-}
-
-/* MAIN */
+/* MAIN CONTAINER */
 .container {
   max-width: 800px;
   margin: 20px auto;
@@ -46,9 +41,11 @@ header p {
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
+/* SEARCH */
 .search-box {
   display: flex;
   gap: 10px;
+  margin-bottom: 15px;
 }
 
 input {
@@ -61,18 +58,19 @@ button {
   padding: 10px 15px;
   font-size: 16px;
   cursor: pointer;
-  background: #138808;
+  background: #1a73e8;
   color: white;
   border: none;
   border-radius: 4px;
 }
 
 button:hover {
-  background: #0f6b06;
+  background: #1558b0;
 }
 
+/* RESULTS */
 .village {
-  padding: 8px;
+  padding: 10px;
   border-bottom: 1px solid #ddd;
   cursor: pointer;
 }
@@ -81,10 +79,12 @@ button:hover {
   background: #f0f8ff;
 }
 
+/* FOOTER */
 footer {
   text-align: center;
-  font-size: 13px;
   padding: 10px;
+  font-size: 13px;
+  color: #555;
 }
 </style>
 </head>
@@ -92,40 +92,33 @@ footer {
 <body>
 
 <header>
-
-<!-- INDIA MAP SVG (EMBEDDED – ALWAYS WORKS) -->
-<svg class="india-map" viewBox="0 0 200 200">
-  <path d="M60 10 L80 30 L70 50 L90 70 L85 95 L100 110 L120 130 L110 160 L95 185 L80 180 L70 160 L55 150 L45 120 L30 90 L40 60 Z"
-        fill="#138808" stroke="#000" stroke-width="2"/>
-</svg>
-
-<h1>India PIN Code Search</h1>
-<p>Search villages by PIN code • Open in Google Maps</p>
+  <h1>India PIN Code Search</h1>
+  <p>Find villages by PIN code • Open in Google Maps</p>
 </header>
 
 <div class="container">
 
-<div class="search-box">
-  <input id="pinInput" placeholder="Enter 6-digit PIN code">
-  <button onclick="searchPin()">Search</button>
-</div>
+  <div class="search-box">
+    <input type="text" id="pinInput" placeholder="Enter 6-digit PIN code">
+    <button onclick="searchPin()">Search</button>
+  </div>
 
-<div id="results"></div>
+  <div id="results"></div>
 
 </div>
 
 <footer>
-© 2025 India PIN Search
+  © 2025 India PIN Search
 </footer>
 
 <script>
 function searchPin() {
   const pin = document.getElementById("pinInput").value.trim();
-  const results = document.getElementById("results");
-  results.innerHTML = "";
+  const resultsDiv = document.getElementById("results");
+  resultsDiv.innerHTML = "";
 
   if (!/^[0-9]{6}$/.test(pin)) {
-    results.innerHTML = "<p>Enter valid 6-digit PIN</p>";
+    resultsDiv.innerHTML = "<p>Please enter a valid 6-digit PIN code.</p>";
     return;
   }
 
@@ -133,20 +126,29 @@ function searchPin() {
     .then(res => res.json())
     .then(data => {
       if (data[0].Status !== "Success") {
-        results.innerHTML = "<p>No data found</p>";
+        resultsDiv.innerHTML = "<p>No data found for this PIN.</p>";
         return;
       }
 
       data[0].PostOffice.forEach(po => {
         const div = document.createElement("div");
         div.className = "village";
-        div.innerHTML = `<b>${po.Name}</b><br>${po.Block}, ${po.District}, ${po.State}`;
+        div.innerHTML = `
+          <strong>${po.Name}</strong><br>
+          ${po.Block}, ${po.District}, ${po.State}
+        `;
         div.onclick = () => {
-          const q = `${po.Name}, ${po.District}, ${po.State}, India`;
-          window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q), "_blank");
+          const query = `${po.Name}, ${po.District}, ${po.State}, India`;
+          window.open(
+            "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(query),
+            "_blank"
+          );
         };
-        results.appendChild(div);
+        resultsDiv.appendChild(div);
       });
+    })
+    .catch(() => {
+      resultsDiv.innerHTML = "<p>Error fetching data. Try again later.</p>";
     });
 }
 </script>
