@@ -1,67 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>India PIN Code Finder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+body {
+  font-family: Arial;
+  background: #eef2f7;
+  margin: 0;
+}
+
+.header {
+  background: #0d6efd;
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+.container {
+  max-width: 500px;
+  margin: auto;
+  padding: 15px;
+}
+
+.search-box {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+input, button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  font-size: 16px;
+}
+
+button {
+  background: #198754;
+  color: white;
+  border: none;
+}
+
+.result-card {
+  background: white;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+#map {
+  height: 300px;
+  margin-top: 15px;
+  border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>India PIN Code Search</h2>
+</div>
+
+<div class="container">
+
+  <div class="search-box">
+    <input id="pin" placeholder="Enter 6 digit PIN">
+    <button onclick="searchPin()">Search</button>
+  </div>
+
+  <div id="result"></div>
+  <div id="map"></div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
-let map;
+let map = L.map('map').setView([20.5937, 78.9629], 5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap'
+}).addTo(map);
+
 let marker;
 
 function searchPin() {
   let pin = document.getElementById("pin").value;
   let result = document.getElementById("result");
 
-  if (!/^\d{6}$/.test(pin)) {
-    result.innerHTML = "<div class='result-card'>❌ Enter valid 6-digit PIN</div>";
+  if (pin.length !== 6) {
+    result.innerHTML = "❌ Enter valid PIN";
     return;
   }
 
   fetch("https://api.postalpincode.in/pincode/" + pin)
-    .then(res => res.json())
-    .then(data => {
-      if (data[0].Status !== "Success") {
-        result.innerHTML = "<div class='result-card'>❌ No data found</div>";
+    .then(r => r.json())
+    .then(d => {
+      if (d[0].Status !== "Success") {
+        result.innerHTML = "❌ No data found";
         return;
       }
 
+      let po = d[0].PostOffice[0];
       result.innerHTML = "";
-      data[0].PostOffice.forEach(p => {
+
+      d[0].PostOffice.forEach(p => {
         result.innerHTML += `
           <div class="result-card">
-            <b>Village / PO:</b> ${p.Name}<br>
-            <b>District:</b> ${p.District}<br>
-            <b>State:</b> ${p.State}<br>
-            <b>PIN:</b> ${p.Pincode}
-          </div>
-        `;
+            <b>${p.Name}</b><br>
+            ${p.District}, ${p.State}
+          </div>`;
       });
 
-      // 🔹 Get location using OpenStreetMap search
-      let location =
-        data[0].PostOffice[0].District + ", " +
-        data[0].PostOffice[0].State + ", India";
+      let place = po.District + ", " + po.State + ", India";
 
-      fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(location))
-        .then(res => res.json())
+      fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + place)
+        .then(r => r.json())
         .then(loc => {
           if (loc.length > 0) {
-            showMap(loc[0].lat, loc[0].lon, location);
+            let lat = loc[0].lat;
+            let lon = loc[0].lon;
+
+            if (marker) map.removeLayer(marker);
+
+            marker = L.marker([lat, lon]).addTo(map)
+              .bindPopup(place)
+              .openPopup();
+
+            map.setView([lat, lon], 11);
           }
         });
     });
 }
-
-function showMap(lat, lon, text) {
-  if (!map) {
-    map = L.map('map').setView([lat, lon], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
-  } else {
-    map.setView([lat, lon], 12);
-  }
-
-  if (marker) {
-    marker.remove();
-  }
-
-  marker = L.marker([lat, lon]).addTo(map)
-    .bindPopup(text)
-    .openPopup();
-}
 </script>
+
+</body>
+</html>
