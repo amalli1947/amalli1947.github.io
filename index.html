@@ -28,7 +28,12 @@ header {
     border-radius: 6px;
 }
 
-select, input, button {
+h2 {
+    margin-top: 0;
+    color: #333;
+}
+
+input {
     width: 100%;
     padding: 10px;
     margin: 10px 0;
@@ -36,10 +41,12 @@ select, input, button {
 }
 
 button {
+    padding: 10px 20px;
     background: #198754;
     color: white;
     border: none;
     cursor: pointer;
+    font-size: 16px;
     border-radius: 4px;
 }
 
@@ -55,9 +62,9 @@ button:hover {
 }
 
 .village {
-    padding: 8px;
-    border-bottom: 1px solid #ccc;
+    padding: 6px;
     cursor: pointer;
+    border-bottom: 1px solid #ccc;
 }
 
 .village:hover {
@@ -68,106 +75,25 @@ button:hover {
 
 <body>
 
-<header>🇮🇳 INDIA PIN CODE SEARCH</header>
+<header>
+🇮🇳 INDIA PIN CODE SEARCH
+</header>
 
 <div class="container">
 
-<h2>📍 Search by State → District → Village</h2>
+<h2>🔍 Search by PIN Code</h2>
+<input type="number" id="pinInput" placeholder="Enter 6-digit PIN code">
+<button onclick="searchByPin()">Search PIN</button>
+<div id="pinResult" class="result"></div>
 
-<select id="stateSelect">
-<option value="">Select State</option>
-</select>
+<hr>
 
-<select id="districtSelect" disabled>
-<option value="">Select District</option>
-</select>
-
-<select id="villageSelect" disabled>
-<option value="">Select Village</option>
-</select>
-
-<div id="dropdownResult" class="result"></div>
+<h2>🔍 Search by Village Name</h2>
+<input type="text" id="villageInput" placeholder="Enter Village Name (example: Gudur)">
+<button onclick="searchByVillage()">Search Village</button>
+<div id="villageResult" class="result"></div>
 
 </div>
 
 <script>
-let allData = [];
-
-// Load ALL Post Office data (India)
-fetch("https://api.postalpincode.in/postoffice/India")
-.then(res => res.json())
-.then(data => {
-    allData = data[0].PostOffice;
-    loadStates();
-});
-
-function loadStates() {
-    const states = [...new Set(allData.map(p => p.State))].sort();
-    const stateSelect = document.getElementById("stateSelect");
-
-    states.forEach(state => {
-        stateSelect.innerHTML += `<option value="${state}">${state}</option>`;
-    });
-}
-
-document.getElementById("stateSelect").addEventListener("change", function () {
-    const districtSelect = document.getElementById("districtSelect");
-    districtSelect.innerHTML = `<option value="">Select District</option>`;
-    districtSelect.disabled = false;
-
-    document.getElementById("villageSelect").disabled = true;
-
-    const districts = [...new Set(
-        allData
-        .filter(p => p.State === this.value)
-        .map(p => p.District)
-    )].sort();
-
-    districts.forEach(d => {
-        districtSelect.innerHTML += `<option value="${d}">${d}</option>`;
-    });
-});
-
-document.getElementById("districtSelect").addEventListener("change", function () {
-    const villageSelect = document.getElementById("villageSelect");
-    villageSelect.innerHTML = `<option value="">Select Village</option>`;
-    villageSelect.disabled = false;
-
-    const villages = allData.filter(p =>
-        p.State === stateSelect.value &&
-        p.District === this.value
-    );
-
-    villages.forEach(v => {
-        villageSelect.innerHTML +=
-        `<option value="${v.Name}|${v.Pincode}|${v.State}|${v.District}">
-        ${v.Name}
-        </option>`;
-    });
-});
-
-document.getElementById("villageSelect").addEventListener("change", function () {
-    const [name, pin, state, district] = this.value.split("|");
-    const result = document.getElementById("dropdownResult");
-
-    result.innerHTML = `
-    <div class="village"
-    onclick="openMap('${name}','${district}','${state}')">
-    🏠 <b>${name}</b><br>
-    PIN: ${pin}<br>
-    ${district}, ${state}
-    </div>`;
-});
-
-function openMap(village, district, state) {
-    const query = `${village}, ${district}, ${state}, India`;
-    window.open(
-        "https://www.google.com/maps/search/?api=1&query=" +
-        encodeURIComponent(query),
-        "_blank"
-    );
-}
-</script>
-
-</body>
-</html>
+function sear
