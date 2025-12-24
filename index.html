@@ -13,9 +13,9 @@ body {
   color: #333;
 }
 
-/* TOP HEADER – PLAIN COLOR */
+/* HEADER */
 header {
-  background: #1a73e8; /* plain blue */
+  background: #1a73e8;
   color: white;
   padding: 15px;
   text-align: center;
@@ -31,9 +31,9 @@ header p {
   font-size: 14px;
 }
 
-/* MAIN CONTAINER */
+/* CONTAINER */
 .container {
-  max-width: 800px;
+  max-width: 900px;
   margin: 20px auto;
   background: white;
   padding: 15px;
@@ -41,11 +41,11 @@ header p {
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-/* SEARCH */
+/* SEARCH BOX */
 .search-box {
   display: flex;
   gap: 10px;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 input {
@@ -69,13 +69,13 @@ button:hover {
 }
 
 /* RESULTS */
-.village {
+.result {
   padding: 10px;
   border-bottom: 1px solid #ddd;
   cursor: pointer;
 }
 
-.village:hover {
+.result:hover {
   background: #f0f8ff;
 }
 
@@ -93,14 +93,21 @@ footer {
 
 <header>
   <h1>India PIN Code Search</h1>
-  <p>Find villages by PIN code • Open in Google Maps</p>
+  <p>Search by PIN or Village • Open in Google Maps</p>
 </header>
 
 <div class="container">
 
+  <!-- SEARCH BY PIN -->
   <div class="search-box">
     <input type="text" id="pinInput" placeholder="Enter 6-digit PIN code">
-    <button onclick="searchPin()">Search</button>
+    <button onclick="searchByPin()">Search by PIN</button>
+  </div>
+
+  <!-- SEARCH BY VILLAGE -->
+  <div class="search-box">
+    <input type="text" id="villageInput" placeholder="Enter Village / Post Office name">
+    <button onclick="searchByVillage()">Search by Village</button>
   </div>
 
   <div id="results"></div>
@@ -112,9 +119,11 @@ footer {
 </footer>
 
 <script>
-function searchPin() {
+const resultsDiv = document.getElementById("results");
+
+/* SEARCH BY PIN */
+function searchByPin() {
   const pin = document.getElementById("pinInput").value.trim();
-  const resultsDiv = document.getElementById("results");
   resultsDiv.innerHTML = "";
 
   if (!/^[0-9]{6}$/.test(pin)) {
@@ -124,32 +133,53 @@ function searchPin() {
 
   fetch("https://api.postalpincode.in/pincode/" + pin)
     .then(res => res.json())
-    .then(data => {
-      if (data[0].Status !== "Success") {
-        resultsDiv.innerHTML = "<p>No data found for this PIN.</p>";
-        return;
-      }
+    .then(data => showResults(data))
+    .catch(() => resultsDiv.innerHTML = "<p>Error fetching data.</p>");
+}
 
-      data[0].PostOffice.forEach(po => {
-        const div = document.createElement("div");
-        div.className = "village";
-        div.innerHTML = `
-          <strong>${po.Name}</strong><br>
-          ${po.Block}, ${po.District}, ${po.State}
-        `;
-        div.onclick = () => {
-          const query = `${po.Name}, ${po.District}, ${po.State}, India`;
-          window.open(
-            "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(query),
-            "_blank"
-          );
-        };
-        resultsDiv.appendChild(div);
-      });
-    })
-    .catch(() => {
-      resultsDiv.innerHTML = "<p>Error fetching data. Try again later.</p>";
-    });
+/* SEARCH BY VILLAGE */
+function searchByVillage() {
+  const village = document.getElementById("villageInput").value.trim();
+  resultsDiv.innerHTML = "";
+
+  if (village.length < 3) {
+    resultsDiv.innerHTML = "<p>Please enter a valid village name.</p>";
+    return;
+  }
+
+  fetch("https://api.postalpincode.in/postoffice/" + encodeURIComponent(village))
+    .then(res => res.json())
+    .then(data => showResults(data))
+    .catch(() => resultsDiv.innerHTML = "<p>Error fetching data.</p>");
+}
+
+/* DISPLAY RESULTS */
+function showResults(data) {
+  if (!data || data[0].Status !== "Success") {
+    resultsDiv.innerHTML = "<p>No data found.</p>";
+    return;
+  }
+
+  data[0].PostOffice.forEach(po => {
+    const div = document.createElement("div");
+    div.className = "result";
+    div.innerHTML = `
+      <strong>${po.Name}</strong><br>
+      PIN: ${po.Pincode}<br>
+      ${po.Block}, ${po.District}, ${po.State}
+    `;
+
+    div.onclick = () => {
+      const query = `${po.Name}, ${po.District}, ${po.State}, India`;
+      window.open(
+        "https://www.google.com/maps/search/?api=1&query=" +
+        encodeURIComponent(query),
+        "_blank"
+      );
+    };
+
+    resultsDiv.appendChild(div);
+  });
 }
 </script>
 
