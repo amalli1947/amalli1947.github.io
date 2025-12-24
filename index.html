@@ -11,7 +11,6 @@ body {
     background: linear-gradient(135deg, #eef2ff, #f9fafb);
 }
 
-/* Header */
 header {
     background: linear-gradient(90deg, #0d6efd, #0b5ed7);
     color: white;
@@ -19,10 +18,8 @@ header {
     text-align: center;
     font-size: 24px;
     font-weight: bold;
-    letter-spacing: 1px;
 }
 
-/* Main card */
 .container {
     max-width: 850px;
     margin: 30px auto;
@@ -33,11 +30,9 @@ header {
 }
 
 h2 {
-    margin-top: 0;
     color: #1f2937;
 }
 
-/* Inputs */
 input {
     width: 100%;
     padding: 12px;
@@ -47,7 +42,6 @@ input {
     border: 1px solid #ccc;
 }
 
-/* Buttons */
 button {
     padding: 12px 22px;
     background: linear-gradient(90deg, #198754, #157347);
@@ -56,14 +50,9 @@ button {
     cursor: pointer;
     font-size: 16px;
     border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    margin-top: 5px;
 }
 
-button:hover {
-    opacity: 0.9;
-}
-
-/* Result box */
 .result {
     margin-top: 15px;
     padding: 12px;
@@ -71,23 +60,30 @@ button:hover {
     border-radius: 8px;
 }
 
-/* Village card */
 .village {
     padding: 10px;
     margin-top: 6px;
-    cursor: pointer;
     border-radius: 6px;
     background: white;
     border: 1px solid #ddd;
-    transition: 0.2s;
 }
 
-.village:hover {
-    background: #e7efff;
-    transform: scale(1.01);
+.share-btn {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 10px 15px;
+    background: #25D366;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    text-align: center;
 }
 
-/* Footer spacing */
+.share-btn:hover {
+    opacity: 0.9;
+}
+
 hr {
     margin: 30px 0;
 }
@@ -96,9 +92,7 @@ hr {
 
 <body>
 
-<header>
-🇮🇳 INDIA PIN CODE SEARCH
-</header>
+<header>🇮🇳 INDIA PIN CODE SEARCH</header>
 
 <div class="container">
 
@@ -132,14 +126,17 @@ function searchByPin() {
 
         let html = "<b>Villages / Post Offices:</b><br>";
         data[0].PostOffice.forEach(po => {
-            html += `<div class="village"
-                     onclick="openMap('${po.Name}','${po.District}','${po.State}')">
-                     📍 ${po.Name} – ${po.District}
-                     </div>`;
+            html += `
+            <div class="village">
+            📍 <b>${po.Name}</b> – ${po.District}<br>
+            <div class="share-btn"
+            onclick="shareWhatsApp('${po.Name}','${po.Pincode}','${po.District}','${po.State}')">
+            📲 Share on WhatsApp
+            </div>
+            </div>`;
         });
         resultDiv.innerHTML = html;
-    })
-    .catch(() => resultDiv.innerHTML = "Error fetching data");
+    });
 }
 
 function searchByVillage() {
@@ -158,25 +155,25 @@ function searchByVillage() {
         let html = "<b>Search Results:</b><br>";
         data[0].PostOffice.forEach(po => {
             html += `
-            <div class="village"
-            onclick="openMap('${po.Name}','${po.District}','${po.State}')">
+            <div class="village">
             🏠 <b>${po.Name}</b><br>
             PIN: ${po.Pincode}<br>
-            ${po.District}, ${po.State}
+            ${po.District}, ${po.State}<br>
+            <div class="share-btn"
+            onclick="shareWhatsApp('${po.Name}','${po.Pincode}','${po.District}','${po.State}')">
+            📲 Share on WhatsApp
+            </div>
             </div>`;
         });
         resultDiv.innerHTML = html;
-    })
-    .catch(() => resultDiv.innerHTML = "Error fetching data");
+    });
 }
 
-function openMap(village, district, state) {
-    const query = `${village}, ${district}, ${state}, India`;
-    window.open(
-        "https://www.google.com/maps/search/?api=1&query=" +
-        encodeURIComponent(query),
-        "_blank"
-    );
+function shareWhatsApp(name, pin, district, state) {
+    const text =
+    `📍 ${name}\nPIN Code: ${pin}\n${district}, ${state}\n\n🔎 Search more:\n${window.location.href}`;
+    const url = "https://wa.me/?text=" + encodeURIComponent(text);
+    window.open(url, "_blank");
 }
 </script>
 
