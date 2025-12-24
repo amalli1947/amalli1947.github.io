@@ -20,6 +20,19 @@ header {
     font-weight: bold;
 }
 
+.lang-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #ffc107;
+    color: black;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
 .container {
     max-width: 850px;
     margin: 30px auto;
@@ -50,7 +63,6 @@ button {
     cursor: pointer;
     font-size: 16px;
     border-radius: 8px;
-    margin-top: 5px;
 }
 
 .result {
@@ -93,11 +105,6 @@ button {
     font-size: 14px;
 }
 
-.map-btn:hover,
-.share-btn:hover {
-    opacity: 0.9;
-}
-
 hr {
     margin: 30px 0;
 }
@@ -106,53 +113,82 @@ hr {
 
 <body>
 
-<header>🇮🇳 INDIA PIN CODE SEARCH</header>
+<header>
+<span id="titleText">🇮🇳 INDIA PIN CODE SEARCH</span>
+<div class="lang-btn" onclick="toggleLang()">తెలుగు</div>
+</header>
 
 <div class="container">
 
-<h2>🔍 Search by PIN Code</h2>
+<h2 id="pinTitle">🔍 Search by PIN Code</h2>
 <input type="number" id="pinInput" placeholder="Enter 6-digit PIN code">
-<button onclick="searchByPin()">Search PIN</button>
+<button id="pinBtn" onclick="searchByPin()">Search PIN</button>
 <div id="pinResult" class="result"></div>
 
 <hr>
 
-<h2>🔍 Search by Village Name</h2>
-<input type="text" id="villageInput" placeholder="Enter Village Name (example: Gudur)">
-<button onclick="searchByVillage()">Search Village</button>
+<h2 id="villageTitle">🔍 Search by Village Name</h2>
+<input type="text" id="villageInput" placeholder="Enter Village Name">
+<button id="villageBtn" onclick="searchByVillage()">Search Village</button>
 <div id="villageResult" class="result"></div>
 
 </div>
 
 <script>
+let lang = "en";
+
+function toggleLang() {
+    lang = lang === "en" ? "te" : "en";
+
+    document.getElementById("titleText").innerText =
+        lang === "en" ? "🇮🇳 INDIA PIN CODE SEARCH" : "🇮🇳 ఇండియా పిన్ కోడ్ శోధన";
+
+    document.getElementById("pinTitle").innerText =
+        lang === "en" ? "🔍 Search by PIN Code" : "🔍 పిన్ కోడ్ ద్వారా శోధించండి";
+
+    document.getElementById("pinBtn").innerText =
+        lang === "en" ? "Search PIN" : "పిన్ శోధించండి";
+
+    document.getElementById("pinInput").placeholder =
+        lang === "en" ? "Enter 6-digit PIN code" : "6 అంకెల పిన్ కోడ్ నమోదు చేయండి";
+
+    document.getElementById("villageTitle").innerText =
+        lang === "en" ? "🔍 Search by Village Name" : "🔍 గ్రామం పేరుతో శోధించండి";
+
+    document.getElementById("villageBtn").innerText =
+        lang === "en" ? "Search Village" : "గ్రామం శోధించండి";
+
+    document.getElementById("villageInput").placeholder =
+        lang === "en" ? "Enter Village Name" : "గ్రామం పేరు నమోదు చేయండి";
+
+    document.querySelector(".lang-btn").innerText =
+        lang === "en" ? "తెలుగు" : "English";
+}
+
 function searchByPin() {
     const pin = document.getElementById("pinInput").value;
     const resultDiv = document.getElementById("pinResult");
-    resultDiv.innerHTML = "Loading...";
+    resultDiv.innerHTML = lang === "en" ? "Loading..." : "లోడ్ అవుతోంది...";
 
     fetch("https://api.postalpincode.in/pincode/" + pin)
     .then(res => res.json())
     .then(data => {
         if (data[0].Status !== "Success") {
-            resultDiv.innerHTML = "❌ Invalid PIN code";
+            resultDiv.innerHTML = lang === "en" ? "❌ Invalid PIN code" : "❌ తప్పు పిన్ కోడ్";
             return;
         }
 
-        let html = "<b>Villages / Post Offices:</b><br>";
+        let html = "";
         data[0].PostOffice.forEach(po => {
             html += `
             <div class="village">
             📍 <b>${po.Name}</b><br>
-            ${po.District}, ${po.State}<br>
-
+            ${po.District}, ${po.State}
             <div class="actions">
-                <span class="map-btn"
-                onclick="openMap('${po.Name}','${po.District}','${po.State}')">
-                🗺️ See on Map
+                <span class="map-btn" onclick="openMap('${po.Name}','${po.District}','${po.State}')">
+                🗺️ ${lang==="en"?"See on Map":"మ్యాప్‌లో చూడండి"}
                 </span>
-
-                <span class="share-btn"
-                onclick="shareWhatsApp('${po.Name}','${po.Pincode}','${po.District}','${po.State}')">
+                <span class="share-btn" onclick="shareWhatsApp('${po.Name}','${po.Pincode}','${po.District}','${po.State}')">
                 📲 WhatsApp
                 </span>
             </div>
@@ -165,32 +201,28 @@ function searchByPin() {
 function searchByVillage() {
     const village = document.getElementById("villageInput").value;
     const resultDiv = document.getElementById("villageResult");
-    resultDiv.innerHTML = "Loading...";
+    resultDiv.innerHTML = lang === "en" ? "Loading..." : "లోడ్ అవుతోంది...";
 
     fetch("https://api.postalpincode.in/postoffice/" + village)
     .then(res => res.json())
     .then(data => {
         if (data[0].Status !== "Success") {
-            resultDiv.innerHTML = "❌ Village not found";
+            resultDiv.innerHTML = lang === "en" ? "❌ Village not found" : "❌ గ్రామం కనబడలేదు";
             return;
         }
 
-        let html = "<b>Search Results:</b><br>";
+        let html = "";
         data[0].PostOffice.forEach(po => {
             html += `
             <div class="village">
             🏠 <b>${po.Name}</b><br>
             PIN: ${po.Pincode}<br>
-            ${po.District}, ${po.State}<br>
-
+            ${po.District}, ${po.State}
             <div class="actions">
-                <span class="map-btn"
-                onclick="openMap('${po.Name}','${po.District}','${po.State}')">
-                🗺️ See on Map
+                <span class="map-btn" onclick="openMap('${po.Name}','${po.District}','${po.State}')">
+                🗺️ ${lang==="en"?"See on Map":"మ్యాప్‌లో చూడండి"}
                 </span>
-
-                <span class="share-btn"
-                onclick="shareWhatsApp('${po.Name}','${po.Pincode}','${po.District}','${po.State}')">
+                <span class="share-btn" onclick="shareWhatsApp('${po.Name}','${po.Pincode}','${po.District}','${po.State}')">
                 📲 WhatsApp
                 </span>
             </div>
@@ -202,18 +234,13 @@ function searchByVillage() {
 
 function openMap(village, district, state) {
     const query = `${village}, ${district}, ${state}, India`;
-    window.open(
-        "https://www.google.com/maps/search/?api=1&query=" +
-        encodeURIComponent(query),
-        "_blank"
-    );
+    window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(query), "_blank");
 }
 
 function shareWhatsApp(name, pin, district, state) {
     const text =
-    `📍 ${name}\nPIN Code: ${pin}\n${district}, ${state}\n\n🔎 Search more:\n${window.location.href}`;
-    const url = "https://wa.me/?text=" + encodeURIComponent(text);
-    window.open(url, "_blank");
+    `📍 ${name}\nPIN: ${pin}\n${district}, ${state}\n\n${window.location.href}`;
+    window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
 }
 </script>
 
